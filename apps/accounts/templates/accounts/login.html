@@ -1,23 +1,25 @@
 {% extends 'base.html' %}
 {% block title %}Login — ConnectPro{% endblock %}
-{% block content %}
+{% block auth_content %}
 <div class="auth-card">
-  <div class="auth-header">
-    <i class="fa-solid fa-circle-nodes auth-logo"></i>
-    <h1 class="auth-title">ConnectPro</h1>
-    <p class="auth-subtitle">Connect with professionals worldwide</p>
-  </div>
-  <form method="post" class="auth-form">
+  <div class="auth-logo"><span class="brand-name">⚡ ConnectPro</span></div>
+  <h2 class="auth-title">Welcome back</h2>
+  <p class="auth-subtitle">Sign in to your professional network</p>
+  <form method="POST">
     {% csrf_token %}
-    {% for field in form %}
-      <div class="form-group">{{ field }}</div>
-      {% if field.errors %}<div class="field-error">{{ field.errors }}</div>{% endif %}
-    {% endfor %}
-    {% if form.non_field_errors %}
-      <div class="form-error">{{ form.non_field_errors }}</div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="username" class="form-control" placeholder="you@example.com" required autofocus/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" class="form-control" placeholder="••••••••" required/>
+    </div>
+    {% if form.errors %}
+      <div class="alert alert-error">Invalid email or password.</div>
     {% endif %}
-    <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+    <button type="submit" class="btn btn-primary btn-block">Sign In</button>
   </form>
-  <p class="auth-switch">Don't have an account? <a href="{% url 'accounts:register' %}">Join ConnectPro</a></p>
+  <div class="auth-link">Don't have an account? <a href="{% url 'accounts:register' %}">Join ConnectPro</a></div>
 </div>
 {% endblock %}
