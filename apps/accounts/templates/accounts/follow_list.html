@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}{{ list_type }} — {{ profile_user.username }}{% endblock %}
+{% block content %}
+<div class="form-page">
+  <h2 class="page-title">{{ list_type }} of @{{ profile_user.username }}</h2>
+  <div class="user-list">
+    {% for follow in follows %}
+      {% with user=follow.follower|default:follow.following %}
+      <a href="{% url 'accounts:profile' user.username %}" class="user-list-item">
+        <img src="{{ user.get_avatar_url }}" class="list-avatar"/>
+        <div>
+          <strong>{{ user.full_name|default:user.username }}</strong>
+          <span>@{{ user.username }}</span>
+        </div>
+      </a>
+      {% endwith %}
+    {% empty %}
+      <p class="empty-text">No {{ list_type|lower }} yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

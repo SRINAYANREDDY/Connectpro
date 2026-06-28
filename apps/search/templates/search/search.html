@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Search — ConnectPro{% endblock %}
+{% block content %}
+<div class="search-page">
+  <div class="search-header">
+    <form method="get" class="big-search-form">
+      <input type="text" name="q" value="{{ query }}" placeholder="Search ConnectPro..." class="big-search-input" autofocus/>
+      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-search"></i></button>
+    </form>
+    {% if query %}
+    <div class="search-tabs">
+      <a href="?q={{ query }}&type=users" class="search-tab {% if search_type == 'users' %}active{% endif %}">People</a>
+      <a href="?q={{ query }}&type=posts" class="search-tab {% if search_type == 'posts' %}active{% endif %}">Posts</a>
+      <a href="?q={{ query }}&type=hashtags" class="search-tab {% if search_type == 'hashtags' %}active{% endif %}">Hashtags</a>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if query %}
+    {% if users_results %}
+    <div class="search-section">
+      <h3 class="section-label">People</h3>
+      {% for user in users_results %}
+      <a href="{% url 'accounts:profile' user.username %}" class="user-result-item">
+        <img src="{{ user.get_avatar_url }}" class="result-avatar"/>
+        <div class="result-info">
+          <strong>{{ user.full_name|default:user.username }}</strong>
+          <span>@{{ user.username }}</span>
+          {% if user.headline %}<small>{{ user.headline }}</small>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if posts_results %}
+    <div class="search-section">
+      <h3 class="section-label">Posts</h3>
+      {% for post in posts_results %}
+      <a href="{% url 'posts:detail' post.id %}" class="post-result-item">
+        <img src="{{ post.author.get_avatar_url }}" class="result-avatar"/>
+        <div>
+          <strong>{{ post.author.username }}</strong>
+          <p>{{ post.content|truncatewords:20 }}</p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if hashtag_results %}
+    <div class="search-section">
+      <h3 class="section-label">Hashtags</h3>
+      {% for tag in hashtag_results %}
+      <a href="{% url 'posts:hashtag' tag.name %}" class="hashtag-result-item">
+        <span class="hashtag-icon">#</span>
+        <div>
+          <strong>#{{ tag.name }}</strong>
+          <span>{{ tag.posts.count }} posts</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not users_results and not posts_results and not hashtag_results %}
+      <div class="empty-card"><i class="fa-solid fa-search"></i><p>No results for "{{ query }}"</p></div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Feed — ConnectPro{% endblock %}
+{% block content %}
+<div class="feed-layout">
+  <!-- Create Post Card -->
+  <div class="create-post-card">
+    <div class="create-post-top">
+      <img src="{{ request.user.get_avatar_url }}" class="post-avatar" alt="you"/>
+      <button class="create-post-trigger" id="expandPostForm">What's on your mind?</button>
+    </div>
+    <form method="post" action="{% url 'posts:create' %}" enctype="multipart/form-data" class="post-form hidden" id="postForm">
+      {% csrf_token %}
+      {{ form.content }}
+      <div class="post-form-media">
+        <label class="media-label"><i class="fa-solid fa-image"></i> Photo <input type="file" name="image" accept="image/*" class="hidden"/></label>
+        <label class="media-label"><i class="fa-solid fa-video"></i> Video <input type="file" name="video" accept="video/*" class="hidden"/></label>
+      </div>
+      <div class="post-form-actions">
+        <button type="button" class="btn btn-ghost" id="cancelPost">Cancel</button>
+        <button type="submit" class="btn btn-primary">Post</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Feed Posts -->
+  <div class="posts-feed" id="postsContainer">
+    {% for item in post_data %}
+      {% include 'partials/post_card.html' %}
+    {% empty %}
+      <div class="empty-feed">
+        <i class="fa-solid fa-users"></i>
+        <h3>Your feed is empty</h3>
+        <p>Follow people to see their posts here.</p>
+        <a href="{% url 'search:explore' %}" class="btn btn-primary">Explore People</a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('expandPostForm')?.addEventListener('click', function() {
+  document.getElementById('postForm').classList.remove('hidden');
+  this.classList.add('hidden');
+});
+document.getElementById('cancelPost')?.addEventListener('click', function() {
+  document.getElementById('postForm').classList.add('hidden');
+  document.getElementById('expandPostForm').classList.remove('hidden');
+});
+</script>
+{% endblock %}

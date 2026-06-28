@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="notif-page">
+  <div class="notif-header">
+    <h2><i class="fa-solid fa-bell"></i> Notifications</h2>
+    <button class="btn btn-sm btn-ghost" id="markAllRead">Mark all read</button>
+  </div>
+  <div class="notif-list">
+    {% for notif in notifications %}
+    <div class="notif-item {% if not notif.is_read %}unread{% endif %}" id="notif-{{ notif.id }}">
+      <div class="notif-icon notif-{{ notif.notification_type }}">
+        {% if notif.notification_type == 'like' %}<i class="fa-solid fa-heart"></i>
+        {% elif notif.notification_type == 'comment' %}<i class="fa-solid fa-comment"></i>
+        {% elif notif.notification_type == 'follow' %}<i class="fa-solid fa-user-plus"></i>
+        {% elif notif.notification_type == 'follow_request' %}<i class="fa-solid fa-user-clock"></i>
+        {% elif notif.notification_type == 'follow_accepted' %}<i class="fa-solid fa-user-check"></i>
+        {% endif %}
+      </div>
+      <img src="{{ notif.sender.get_avatar_url }}" class="notif-avatar" alt=""/>
+      <div class="notif-body">
+        <p><a href="{% url 'accounts:profile' notif.sender.username %}"><strong>{{ notif.sender.username }}</strong></a> {{ notif.message|cut:notif.sender.username|cut:"  " }}</p>
+        <span class="notif-time">{{ notif.created_at|naturaltime }}</span>
+      </div>
+      {% if notif.post %}
+        <a href="{% url 'posts:detail' notif.post.id %}" class="notif-link"><i class="fa-solid fa-arrow-right"></i></a>
+      {% endif %}
+    </div>
+    {% empty %}
+      <div class="empty-card"><i class="fa-solid fa-bell-slash"></i><p>No notifications yet.</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('markAllRead')?.addEventListener('click', function() {
+  fetch('{% url "notifications:mark_read" %}', {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}})
+  .then(() => document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread')));
+});
+</script>
+{% endblock %}

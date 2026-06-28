@@ -1,0 +1,35 @@
+<nav class="navbar">
+  <div class="navbar-brand">
+    <a href="/" class="brand-link">
+      <i class="fa-solid fa-circle-nodes brand-icon"></i>
+      <span class="brand-name">ConnectPro</span>
+    </a>
+  </div>
+  <div class="navbar-search">
+    <form action="{% url 'search:search' %}" method="get" class="search-form">
+      <i class="fa-solid fa-search search-icon"></i>
+      <input type="text" name="q" placeholder="Search people, posts..." class="search-input" value="{{ request.GET.q }}"/>
+    </form>
+  </div>
+  <div class="navbar-actions">
+    <button class="icon-btn theme-toggle" id="themeToggle" title="Toggle theme">
+      <i class="fa-solid {% if request.user.theme == 'dark' %}fa-sun{% else %}fa-moon{% endif %}" id="themeIcon"></i>
+    </button>
+    <a href="{% url 'notifications:list' %}" class="icon-btn notif-btn" title="Notifications">
+      <i class="fa-solid fa-bell"></i>
+      {% if unread_notifications_count %}
+        <span class="badge" id="notifBadge">{{ unread_notifications_count }}</span>
+      {% else %}
+        <span class="badge hidden" id="notifBadge">0</span>
+      {% endif %}
+    </a>
+    <div class="nav-avatar-wrap">
+      <img src="{{ request.user.get_avatar_url }}" class="nav-avatar" alt="avatar"/>
+      <div class="nav-dropdown">
+        <a href="{% url 'accounts:profile' request.user.username %}"><i class="fa-solid fa-user"></i> Profile</a>
+        <a href="{% url 'accounts:edit_profile' %}"><i class="fa-solid fa-gear"></i> Settings</a>
+        <a href="{% url 'accounts:logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+      </div>
+    </div>
+  </div>
+</nav>

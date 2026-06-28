@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ request.user.theme|default:'light' }}">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}ConnectPro{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/main.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+{% if request.user.is_authenticated %}
+  {% include 'partials/navbar.html' %}
+  <div class="app-layout">
+    {% include 'partials/sidebar.html' %}
+    <main class="main-content">
+      {% if messages %}
+        <div class="messages-container">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+    <aside class="right-panel">
+      {% block right_panel %}
+        <div class="panel-card">
+          <h4 class="panel-title">Your Profile</h4>
+          <div class="mini-profile">
+            <img src="{{ request.user.get_avatar_url }}" alt="avatar" class="mini-avatar"/>
+            <div>
+              <p class="mini-name">{{ request.user.full_name|default:request.user.username }}</p>
+              <p class="mini-username">@{{ request.user.username }}</p>
+            </div>
+          </div>
+          <div class="mini-stats">
+            <div><span class="stat-num">{{ request.user.get_followers_count }}</span><span class="stat-label">Followers</span></div>
+            <div><span class="stat-num">{{ request.user.get_following_count }}</span><span class="stat-label">Following</span></div>
+          </div>
+        </div>
+      {% endblock %}
+    </aside>
+  </div>
+{% else %}
+  <main class="auth-layout">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+{% endif %}
+
+<script>
+  const CSRF_TOKEN = '{{ csrf_token }}';
+  const IS_AUTHENTICATED = {{ request.user.is_authenticated|yesno:'true,false' }};
+  {% if request.user.is_authenticated %}
+  const CURRENT_USER = '{{ request.user.username }}';
+  {% endif %}
+</script>
+<script src="/static/js/main.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

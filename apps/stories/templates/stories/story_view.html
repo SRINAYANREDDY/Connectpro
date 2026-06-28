@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}{{ story.author.username }}'s Story{% endblock %}
+{% block content %}
+<div class="story-viewer">
+  <div class="story-container">
+    <div class="story-progress"><div class="story-progress-bar" id="storyProgress"></div></div>
+    <div class="story-top">
+      <a href="{% url 'accounts:profile' story.author.username %}" class="story-author">
+        <img src="{{ story.author.get_avatar_url }}" class="story-author-avatar"/>
+        <span>{{ story.author.username }}</span>
+      </a>
+      {% if is_own %}
+        <button class="btn btn-sm btn-danger" onclick="deleteStory({{ story.id }})"><i class="fa-solid fa-trash"></i></button>
+      {% endif %}
+      <a href="{% url 'stories:list' %}" class="story-close"><i class="fa-solid fa-xmark"></i></a>
+    </div>
+
+    <div class="story-media">
+      {% if story.image %}
+        <img src="{{ story.image.url }}" class="story-media-content"/>
+      {% elif story.video %}
+        <video autoplay class="story-media-content" id="storyVideo">
+          <source src="{{ story.video.url }}"/>
+        </video>
+      {% endif %}
+      {% if story.caption %}<div class="story-caption">{{ story.caption }}</div>{% endif %}
+    </div>
+
+    <div class="story-nav">
+      {% if prev_story %}
+        <a href="{% url 'stories:view' prev_story.id %}" class="story-nav-btn prev"><i class="fa-solid fa-chevron-left"></i></a>
+      {% endif %}
+      {% if next_story %}
+        <a href="{% url 'stories:view' next_story.id %}" class="story-nav-btn next"><i class="fa-solid fa-chevron-right"></i></a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if is_own and viewers %}
+  <div class="story-viewers">
+    <h4>Viewers ({{ story.view_count }})</h4>
+    {% for viewer in viewers %}
+    <div class="viewer-item">
+      <img src="{{ viewer.get_avatar_url }}" class="viewer-avatar"/>
+      <span>{{ viewer.username }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const progressBar = document.getElementById('storyProgress');
+let progress = 0;
+const duration = {% if story.video %}0{% else %}5000{% endif %};
+if(duration > 0) {
+  const interval = setInterval(() => {
+    progress += 100 / (duration / 100);
+    progressBar.style.width = Math.min(progress, 100) + '%';
+    if(progress >= 100) {
+      clearInterval(interval);
+      {% if next_story %}window.location = '{% url "stories:view" next_story.id %}';{% endif %}
+    }
+  }, 100);
+}
+function deleteStory(id) {
+  if(!confirm('Delete this story?')) return;
+  fetch(`/stories/${id}/delete/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}})
+  .then(() => window.location = '{% url "stories:list" %}');
+}
+</script>
+{% endblock %}

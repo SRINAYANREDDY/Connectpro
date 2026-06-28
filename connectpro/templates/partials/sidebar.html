@@ -1,0 +1,34 @@
+<aside class="sidebar">
+  <nav class="sidebar-nav">
+    <a href="{% url 'posts:feed' %}" class="sidebar-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">
+      <i class="fa-solid fa-house"></i><span>Feed</span>
+    </a>
+    <a href="{% url 'search:explore' %}" class="sidebar-link {% if request.resolver_match.url_name == 'explore' %}active{% endif %}">
+      <i class="fa-solid fa-compass"></i><span>Explore</span>
+    </a>
+    <a href="{% url 'posts:bookmarks' %}" class="sidebar-link {% if request.resolver_match.url_name == 'bookmarks' %}active{% endif %}">
+      <i class="fa-solid fa-bookmark"></i><span>Bookmarks</span>
+    </a>
+    <a href="{% url 'stories:list' %}" class="sidebar-link {% if 'stories' in request.path %}active{% endif %}">
+      <i class="fa-solid fa-circle-play"></i><span>Stories</span>
+    </a>
+    <a href="{% url 'reels:reels_feed' %}" class="sidebar-link {% if 'reels' in request.path %}active{% endif %}">
+      <i class="fa-solid fa-video"></i><span>Reels</span>
+    </a>
+    <a href="{% url 'messaging:inbox' %}" class="sidebar-link {% if 'messages' in request.path %}active{% endif %}">
+      <i class="fa-solid fa-message"></i><span>Messages</span>
+    </a>
+    <a href="{% url 'notifications:list' %}" class="sidebar-link {% if 'notifications' in request.path %}active{% endif %}">
+      <i class="fa-solid fa-bell"></i><span>Notifications</span>
+      {% if unread_notifications_count %}
+        <span class="sidebar-badge">{{ unread_notifications_count }}</span>
+      {% endif %}
+    </a>
+    <a href="{% url 'accounts:profile' request.user.username %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+      <i class="fa-solid fa-user"></i><span>Profile</span>
+    </a>
+    <a href="{% url 'accounts:logout' %}" class="sidebar-link" style="margin-top:auto;color:var(--danger)">
+      <i class="fa-solid fa-sign-out-alt"></i><span>Logout</span>
+    </a>
+  </nav>
+</aside>

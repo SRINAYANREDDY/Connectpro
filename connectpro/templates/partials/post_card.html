@@ -1,0 +1,83 @@
+{% load humanize %}
+<div class="post-card" id="post-{{ item.post.id }}">
+  <div class="post-header">
+    <a href="{% url 'accounts:profile' item.post.author.username %}" class="post-author-link">
+      <img src="{{ item.post.author.get_avatar_url }}" class="post-avatar" alt="avatar"/>
+      <div class="post-author-info">
+        <span class="post-author-name">{{ item.post.author.full_name|default:item.post.author.username }}</span>
+        <span class="post-author-meta">@{{ item.post.author.username }} · {{ item.post.created_at|naturaltime }}</span>
+        {% if item.post.author.headline %}
+          <span class="post-author-headline">{{ item.post.author.headline }}</span>
+        {% endif %}
+      </div>
+    </a>
+    <div class="post-menu">
+      <button class="icon-btn post-menu-btn"><i class="fa-solid fa-ellipsis"></i></button>
+      <div class="post-dropdown">
+        {% if item.post.author == request.user %}
+          <button class="dropdown-item danger" onclick="deletePost({{ item.post.id }})">
+            <i class="fa-solid fa-trash"></i> Delete Post
+          </button>
+        {% else %}
+          <button class="dropdown-item" onclick="hidePost({{ item.post.id }})">
+            <i class="fa-solid fa-eye-slash"></i> Hide Post
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="post-content">
+    <p>{{ item.post.content|linebreaksbr }}</p>
+    {% if item.post.hashtags.all %}
+      <div class="post-hashtags">
+        {% for tag in item.post.hashtags.all %}
+          <a href="{% url 'posts:hashtag' tag.name %}" class="hashtag">#{{ tag.name }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  {% if item.post.image %}
+    <div class="post-media">
+      <img src="{{ item.post.image.url }}" alt="Post image" class="post-image" loading="lazy"/>
+    </div>
+  {% endif %}
+  {% if item.post.video %}
+    <div class="post-media">
+      <video controls class="post-video">
+        <source src="{{ item.post.video.url }}"/>
+      </video>
+    </div>
+  {% endif %}
+
+  <div class="post-actions">
+    <button class="action-btn like-btn {% if item.liked %}liked{% endif %}"
+            data-post-id="{{ item.post.id }}"
+            data-liked="{{ item.liked|yesno:'true,false' }}">
+      <i class="fa-{% if item.liked %}solid{% else %}regular{% endif %} fa-heart"></i>
+      <span class="like-count">{{ item.post.get_like_count }}</span>
+    </button>
+    <a href="{% url 'posts:detail' item.post.id %}" class="action-btn">
+      <i class="fa-regular fa-comment"></i>
+      <span>{{ item.comment_count }}</span>
+    </a>
+    <button class="action-btn bookmark-btn {% if item.bookmarked %}bookmarked{% endif %}"
+            data-post-id="{{ item.post.id }}"
+            data-bookmarked="{{ item.bookmarked|yesno:'true,false' }}">
+      <i class="fa-{% if item.bookmarked %}solid{% else %}regular{% endif %} fa-bookmark"></i>
+    </button>
+    <button class="action-btn share-btn" onclick="sharePost('{% url 'posts:detail' item.post.id %}')">
+      <i class="fa-solid fa-share-nodes"></i>
+    </button>
+  </div>
+
+  <div class="comment-section" id="comments-{{ item.post.id }}">
+    <form class="comment-form" data-post-id="{{ item.post.id }}">
+      {% csrf_token %}
+      <img src="{{ request.user.get_avatar_url }}" class="comment-avatar" alt="you"/>
+      <input type="text" class="comment-input" placeholder="Write a comment..."/>
+      <button type="submit" class="btn-icon-send"><i class="fa-solid fa-paper-plane"></i></button>
+    </form>
+  </div>
+</div>

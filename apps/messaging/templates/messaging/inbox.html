@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inbox — ConnectPro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/messaging_reels.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="inbox-page">
+
+  <div class="inbox-header">
+    <h1 class="inbox-title">Messages</h1>
+    <a href="#" class="inbox-new-btn" id="new-msg-btn" title="New message">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+        <path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2zm-2 10h-5v5h-2v-5H6v-2h5V5h2v5h5v2z"/>
+      </svg>
+    </a>
+  </div>
+
+  <!-- Search -->
+  <div class="inbox-search-wrap">
+    <input type="search" class="inbox-search" id="inbox-search" placeholder="Search conversations…" autocomplete="off">
+    <svg class="inbox-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    </svg>
+  </div>
+
+  <div class="inbox-list" id="inbox-list">
+    {% for item in conv_data %}
+      <a
+        href="{% url 'messaging:conversation' item.conv.pk %}"
+        class="inbox-item {% if item.unread %}inbox-item--unread{% endif %}"
+        data-search="{{ item.other.username|lower }} {{ item.other.get_full_name|lower }}"
+        id="inbox-conv-{{ item.conv.pk }}"
+      >
+        <!-- Avatar -->
+        <div class="inbox-avatar-wrap">
+          {% if item.other and item.other.avatar %}
+            <img src="{{ item.other.avatar.url }}" alt="{{ item.other.username }}" class="inbox-avatar">
+          {% else %}
+            <div class="inbox-avatar inbox-avatar--placeholder">
+              {{ item.other.username|first|upper }}
+            </div>
+          {% endif %}
+          <span class="online-indicator" id="online-{{ item.other.pk }}" style="display:none"></span>
+        </div>
+
+        <!-- Text -->
+        <div class="inbox-item-body">
+          <div class="inbox-item-top">
+            <span class="inbox-item-name">
+              {{ item.other.get_full_name|default:item.other.username }}
+            </span>
+            {% if item.last_msg %}
+              <span class="inbox-item-time">{{ item.last_msg.created_at|date:"g:i A" }}</span>
+            {% endif %}
+          </div>
+          <div class="inbox-item-bottom">
+            <span class="inbox-item-preview">
+              {% if item.last_msg %}
+                {% if item.last_msg.sender == request.user %}You: {% endif %}
+                {% if item.last_msg.is_file_message %}
+                  📎 {{ item.last_msg.file_name|truncatechars:30 }}
+                {% else %}
+                  {{ item.last_msg.content|truncatechars:50 }}
+                {% endif %}
+              {% else %}
+                No messages yet
+              {% endif %}
+            </span>
+            {% if item.unread %}
+              <span class="inbox-unread-badge" id="unread-badge-{{ item.conv.pk }}">{{ item.unread }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+      </a>
+    {% empty %}
+      <div class="inbox-empty">
+        <div class="inbox-empty-icon">💬</div>
+        <h3>No conversations yet</h3>
+        <p>Search for someone and start a conversation.</p>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- New message modal -->
+<div class="modal-overlay" id="new-msg-modal" style="display:none" role="dialog" aria-modal="true" aria-label="New Message">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>New Message</h2>
+      <button class="modal-close" id="close-new-msg">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" id="user-search-input" class="modal-input" placeholder="Search by username…" autocomplete="off">
+      <div class="modal-results" id="modal-user-results"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/messaging_reels.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    initInbox({
+      searchUrl: "{% url 'search:search' %}",
+      startUrl: "/messages/start/",
+    });
+  });
+</script>
+{% endblock %}

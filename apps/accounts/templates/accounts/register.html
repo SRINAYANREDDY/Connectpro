@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Register — ConnectPro{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <div class="auth-header">
+    <i class="fa-solid fa-circle-nodes auth-logo"></i>
+    <h1 class="auth-title">Join ConnectPro</h1>
+    <p class="auth-subtitle">Build your professional network</p>
+  </div>
+  <form method="post" class="auth-form">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-group">{{ field }}</div>
+      {% if field.errors %}<div class="field-error">{{ field.errors }}</div>{% endif %}
+    {% endfor %}
+    {% if form.non_field_errors %}
+      <div class="form-error">{{ form.non_field_errors }}</div>
+    {% endif %}
+    <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+  </form>
+  <p class="auth-switch">Already have an account? <a href="{% url 'accounts:login' %}">Sign In</a></p>
+</div>
+{% endblock %}

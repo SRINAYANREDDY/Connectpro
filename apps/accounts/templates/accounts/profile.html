@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}{{ profile_user.username }} — ConnectPro{% endblock %}
+{% block content %}
+<div class="profile-page">
+  <!-- Cover -->
+  <div class="profile-cover">
+    {% if profile_user.cover_photo %}
+      <img src="{{ profile_user.cover_photo.url }}" alt="cover" class="cover-img"/>
+    {% else %}
+      <div class="cover-placeholder"></div>
+    {% endif %}
+  </div>
+
+  <!-- Profile Header -->
+  <div class="profile-header-card">
+    <div class="profile-avatar-wrap">
+      <img src="{{ profile_user.get_avatar_url }}" alt="avatar" class="profile-avatar"/>
+      {% if profile_user.is_verified %}<span class="verified-badge"><i class="fa-solid fa-circle-check"></i></span>{% endif %}
+    </div>
+    <div class="profile-info">
+      <h1 class="profile-name">{{ profile_user.full_name|default:profile_user.username }}</h1>
+      <p class="profile-username">@{{ profile_user.username }}</p>
+      {% if profile_user.headline %}<p class="profile-headline">{{ profile_user.headline }}</p>{% endif %}
+      {% if profile_user.bio %}<p class="profile-bio">{{ profile_user.bio }}</p>{% endif %}
+      <div class="profile-meta">
+        {% if profile_user.location %}<span><i class="fa-solid fa-location-dot"></i> {{ profile_user.location }}</span>{% endif %}
+        {% if profile_user.website %}<a href="{{ profile_user.website }}" target="_blank"><i class="fa-solid fa-link"></i> {{ profile_user.website }}</a>{% endif %}
+        <span><i class="fa-solid fa-calendar"></i> Joined {{ profile_user.date_joined|date:"F Y" }}</span>
+      </div>
+      <div class="profile-stats">
+        <a href="{% url 'accounts:followers' profile_user.username %}">
+          <strong>{{ profile_user.get_followers_count }}</strong> <span>Followers</span>
+        </a>
+        <a href="{% url 'accounts:following' profile_user.username %}">
+          <strong>{{ profile_user.get_following_count }}</strong> <span>Following</span>
+        </a>
+        <span><strong>{{ profile_user.posts.count }}</strong> <span>Posts</span></span>
+      </div>
+    </div>
+    <div class="profile-actions">
+      {% if is_own_profile %}
+        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-outline"><i class="fa-solid fa-pen"></i> Edit Profile</a>
+      {% else %}
+        {% if not is_blocked %}
+          <button class="btn {% if is_following %}btn-outline{% else %}btn-primary{% endif %} follow-btn"
+                  data-username="{{ profile_user.username }}"
+                  data-following="{{ is_following|yesno:'true,false' }}">
+            {% if is_following %}<i class="fa-solid fa-user-minus"></i> Following
+            {% elif has_pending %}<i class="fa-solid fa-clock"></i> Requested
+            {% else %}<i class="fa-solid fa-user-plus"></i> Follow{% endif %}
+          </button>
+        {% endif %}
+        <button class="btn btn-ghost block-btn" data-username="{{ profile_user.username }}">
+          {% if is_blocked %}<i class="fa-solid fa-unlock"></i> Unblock{% else %}<i class="fa-solid fa-ban"></i> Block{% endif %}
+        </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Follow Requests (own profile only) -->
+  {% if is_own_profile and follow_requests %}
+  <div class="section-card">
+    <h3 class="section-title"><i class="fa-solid fa-user-clock"></i> Follow Requests</h3>
+    <div class="request-list">
+      {% for req in follow_requests %}
+      <div class="request-item" id="req-{{ req.follower.username }}">
+        <img src="{{ req.follower.get_avatar_url }}" class="req-avatar" alt=""/>
+        <div class="req-info">
+          <a href="{% url 'accounts:profile' req.follower.username %}">{{ req.follower.username }}</a>
+          <span>{{ req.created_at|naturaltime }}</span>
+        </div>
+        <div class="req-actions">
+          <button class="btn btn-sm btn-primary" onclick="acceptRequest('{{ req.follower.username }}')">Accept</button>
+          <button class="btn btn-sm btn-outline" onclick="declineRequest('{{ req.follower.username }}')">Decline</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="profile-body">
+    <!-- Left Column -->
+    <div class="profile-left">
+      <!-- Skills -->
+      <div class="section-card">
+        <h3 class="section-title"><i class="fa-solid fa-star"></i> Skills</h3>
+        <div class="skills-grid" id="skillsGrid">
+          {% for skill in skills %}
+            <span class="skill-tag">
+              {{ skill.name }}
+              {% if is_own_profile %}
+                <button onclick="deleteSkill({{ skill.id }}, this)" class="skill-del"><i class="fa-solid fa-xmark"></i></button>
+              {% endif %}
+            </span>
+          {% empty %}
+            <p class="empty-text">No skills added yet.</p>
+          {% endfor %}
+        </div>
+        {% if is_own_profile %}
+        <form id="skillForm" class="add-skill-form">
+          {% csrf_token %}
+          <input type="text" name="name" id="skillInput" placeholder="Add a skill..." class="form-control"/>
+          <button type="submit" class="btn btn-sm btn-primary">Add</button>
+        </form>
+        {% endif %}
+      </div>
+
+      <!-- Education -->
+      <div class="section-card">
+        <h3 class="section-title"><i class="fa-solid fa-graduation-cap"></i> Education</h3>
+        {% for edu in education %}
+        <div class="edu-item">
+          <div class="edu-icon"><i class="fa-solid fa-university"></i></div>
+          <div class="edu-info">
+            <h4>{{ edu.school }}</h4>
+            {% if edu.degree %}<p>{{ edu.degree }}{% if edu.field_of_study %} in {{ edu.field_of_study }}{% endif %}</p>{% endif %}
+            <span class="edu-years">{{ edu.start_year }} – {{ edu.end_year|default:"Present" }}</span>
+            {% if edu.description %}<p class="edu-desc">{{ edu.description }}</p>{% endif %}
+          </div>
+          {% if is_own_profile %}
+            <a href="{% url 'accounts:delete_education' edu.pk %}" class="btn-icon-del"><i class="fa-solid fa-trash"></i></a>
+          {% endif %}
+        </div>
+        {% empty %}
+          <p class="empty-text">No education added.</p>
+        {% endfor %}
+        {% if is_own_profile %}
+          <a href="{% url 'accounts:add_education' %}" class="btn btn-sm btn-outline mt-2"><i class="fa-solid fa-plus"></i> Add Education</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="profile-right">
+      <!-- Projects -->
+      <div class="section-card">
+        <h3 class="section-title"><i class="fa-solid fa-folder-open"></i> Projects</h3>
+        {% for project in projects %}
+        <div class="project-card" id="project-{{ project.id }}">
+          {% if project.image %}
+            <img src="{{ project.image.url }}" class="project-img" alt="{{ project.title }}"/>
+          {% endif %}
+          <div class="project-info">
+            <h4>{% if project.url %}<a href="{{ project.url }}" target="_blank">{{ project.title }}</a>{% else %}{{ project.title }}{% endif %}</h4>
+            <p>{{ project.description }}</p>
+            {% if project.technologies %}
+              <div class="tech-tags">
+                {% for tech in project.technologies.split %}
+                  <span class="tech-tag">{{ tech }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% if project.ai_rating %}
+            <div class="ai-rating">
+              <span class="rating-badge">⭐ {{ project.ai_rating }}/10</span>
+              <p class="rating-feedback">{{ project.ai_feedback }}</p>
+            </div>
+            {% endif %}
+            {% if is_own_profile %}
+            <div class="project-actions">
+              <button class="btn btn-sm btn-primary rate-btn" data-project-id="{{ project.id }}">
+                <i class="fa-solid fa-robot"></i> AI Rate
+              </button>
+              <a href="{% url 'accounts:delete_project' project.pk %}" class="btn btn-sm btn-ghost">Delete</a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+          <p class="empty-text">No projects added yet.</p>
+        {% endfor %}
+        {% if is_own_profile %}
+          <a href="{% url 'accounts:add_project' %}" class="btn btn-sm btn-outline mt-2"><i class="fa-solid fa-plus"></i> Add Project</a>
+        {% endif %}
+      </div>
+
+      <!-- Posts -->
+      {% if can_see_posts %}
+        <div class="posts-section">
+          {% for item in post_data %}
+            {% with item=item %}{% include 'partials/post_card.html' %}{% endwith %}
+          {% empty %}
+            <div class="empty-card"><i class="fa-solid fa-newspaper"></i><p>No posts yet.</p></div>
+          {% endfor %}
+        </div>
+      {% elif profile_user.is_private %}
+        <div class="private-notice">
+          <i class="fa-solid fa-lock"></i>
+          <h3>This account is private</h3>
+          <p>Follow to see their posts.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- AI Rating Modal -->
+<div class="modal" id="aiModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('aiModal')">&times;</button>
+    <h3><i class="fa-solid fa-robot"></i> AI Project Rating</h3>
+    <div id="aiModalContent"><div class="loading-spinner"></div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Follow
+document.querySelectorAll('.follow-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const username = this.dataset.username;
+    fetch(`/accounts/${username}/follow/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN,'Content-Type':'application/json'}})
+    .then(r=>r.json()).then(data => {
+      if(data.status === 'accepted') { this.innerHTML = '<i class="fa-solid fa-user-minus"></i> Following'; this.classList.replace('btn-primary','btn-outline'); }
+      else if(data.status === 'pending') { this.innerHTML = '<i class="fa-solid fa-clock"></i> Requested'; }
+      else { this.innerHTML = '<i class="fa-solid fa-user-plus"></i> Follow'; this.classList.replace('btn-outline','btn-primary'); }
+    });
+  });
+});
+
+// Block
+document.querySelectorAll('.block-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    if(!confirm('Are you sure?')) return;
+    fetch(`/accounts/${this.dataset.username}/block/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}})
+    .then(r=>r.json()).then(d => location.reload());
+  });
+});
+
+// Follow requests
+function acceptRequest(username) {
+  fetch(`/accounts/${username}/accept-request/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}})
+  .then(r=>r.json()).then(() => document.getElementById('req-'+username)?.remove());
+}
+function declineRequest(username) {
+  fetch(`/accounts/${username}/decline-request/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}})
+  .then(r=>r.json()).then(() => document.getElementById('req-'+username)?.remove());
+}
+
+// Skills
+const skillForm = document.getElementById('skillForm');
+if(skillForm) {
+  skillForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('skillInput').value.trim();
+    if(!name) return;
+    fetch('/accounts/skill/add/', {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN,'Content-Type':'application/x-www-form-urlencoded'}, body:`name=${encodeURIComponent(name)}`})
+    .then(r=>r.json()).then(d => {
+      if(d.status==='ok') {
+        const grid = document.getElementById('skillsGrid');
+        const span = document.createElement('span');
+        span.className = 'skill-tag';
+        span.id = 'skill-'+d.id;
+        span.innerHTML = `${d.name} <button onclick="deleteSkill(${d.id}, this)" class="skill-del"><i class="fa-solid fa-xmark"></i></button>`;
+        grid.appendChild(span);
+        document.getElementById('skillInput').value = '';
+      }
+    });
+  });
+}
+
+function deleteSkill(id, btn) {
+  fetch(`/accounts/skill/${id}/delete/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}})
+  .then(r=>r.json()).then(() => btn.closest('.skill-tag').remove());
+}
+
+// AI Rating
+document.querySelectorAll('.rate-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const id = this.dataset.projectId;
+    document.getElementById('aiModal').classList.add('show');
+    document.getElementById('aiModalContent').innerHTML = '<div class="loading-spinner"></div><p style="text-align:center">AI is rating your project...</p>';
+    fetch(`/accounts/project/${id}/rate/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}})
+    .then(r=>r.json()).then(d => {
+      if(d.status==='ok') {
+        document.getElementById('aiModalContent').innerHTML = `
+          <div class="ai-result">
+            <div class="rating-circle">${d.rating}<span>/10</span></div>
+            <p class="ai-feedback">${d.feedback}</p>
+            <div class="ai-lists">
+              <div><h4>✅ Strengths</h4><ul>${(d.strengths||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div>
+              <div><h4>🔧 Improvements</h4><ul>${(d.improvements||[]).map(i=>`<li>${i}</li>`).join('')}</ul></div>
+            </div>
+          </div>`;
+      } else {
+        document.getElementById('aiModalContent').innerHTML = `<p class="error">Error: ${d.message}</p>`;
+      }
+    });
+  });
+});
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+</script>
+{% endblock %}

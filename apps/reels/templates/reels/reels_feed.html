@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Reels — ConnectPro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/messaging_reels.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="reels-feed-container" id="reels-feed">
+
+  {% if not reels %}
+    <div class="reels-empty-state">
+      <div class="reels-empty-icon">🎬</div>
+      <h2>No reels yet</h2>
+      <p>Follow people or <a href="{% url 'reels:upload_reel' %}">upload your first reel</a>.</p>
+    </div>
+  {% else %}
+    {% for reel in reels %}
+      {% include "reels/reel_card.html" with reel=reel liked=reel.pk|stringformat:"s" in liked_ids %}
+    {% endfor %}
+  {% endif %}
+
+</div>
+
+<!-- Upload FAB -->
+<a href="{% url 'reels:upload_reel' %}" class="reels-upload-fab" title="Upload Reel">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+    <path d="M12 4a1 1 0 011 1v6h6a1 1 0 010 2h-6v6a1 1 0 01-2 0v-6H5a1 1 0 010-2h6V5a1 1 0 011-1z"/>
+  </svg>
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/messaging_reels.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    initReelsFeed();
+  });
+</script>
+{% endblock %}

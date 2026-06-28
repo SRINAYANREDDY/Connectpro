@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Create Story{% endblock %}
+{% block content %}
+<div class="form-page">
+  <h2 class="page-title"><i class="fa-solid fa-circle-plus"></i> Create Story</h2>
+  <form method="post" enctype="multipart/form-data" class="settings-form">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Image</label>
+      <input type="file" name="image" accept="image/*" class="form-control"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Video</label>
+      <input type="file" name="video" accept="video/*" class="form-control"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Caption (optional)</label>
+      <input type="text" name="caption" maxlength="200" class="form-control" placeholder="Add a caption..."/>
+    </div>
+    <p class="form-hint">Stories expire after 24 hours automatically.</p>
+    <button type="submit" class="btn btn-primary">Share Story</button>
+    <a href="{% url 'stories:list' %}" class="btn btn-ghost">Cancel</a>
+  </form>
+</div>
+{% endblock %}

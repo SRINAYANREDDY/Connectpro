@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}#{{ hashtag.name }}{% endblock %}
+{% block content %}
+<div class="feed-layout">
+  <div class="hashtag-header">
+    <h2>#{{ hashtag.name }}</h2>
+    <span>{{ post_data|length }} posts</span>
+  </div>
+  {% for item in post_data %}
+    {% include 'partials/post_card.html' %}
+  {% empty %}
+    <div class="empty-card"><p>No posts with this hashtag.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

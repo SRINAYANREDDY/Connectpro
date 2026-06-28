@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Explore — ConnectPro{% endblock %}
+{% block content %}
+<div class="explore-page">
+  <h2 class="page-title"><i class="fa-solid fa-compass"></i> Explore</h2>
+
+  <div class="explore-grid">
+    <!-- Trending Hashtags -->
+    <div class="explore-panel">
+      <h3 class="panel-heading">Trending Topics</h3>
+      <div class="trending-list">
+        {% for tag in trending_hashtags %}
+        <a href="{% url 'posts:hashtag' tag.name %}" class="trending-item">
+          <span class="trending-rank">#{{ forloop.counter }}</span>
+          <div>
+            <strong>#{{ tag.name }}</strong>
+            <span>{{ tag.post_count }} posts</span>
+          </div>
+          <i class="fa-solid fa-arrow-trend-up trend-icon"></i>
+        </a>
+        {% empty %}
+          <p class="empty-text">No trending topics yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Suggested Users -->
+    <div class="explore-panel">
+      <h3 class="panel-heading">People You May Know</h3>
+      <div class="suggested-list">
+        {% for user in suggested_users %}
+        <div class="suggested-item">
+          <a href="{% url 'accounts:profile' user.username %}" class="suggested-profile">
+            <img src="{{ user.get_avatar_url }}" class="suggested-avatar"/>
+            <div>
+              <strong>{{ user.full_name|default:user.username }}</strong>
+              <span>@{{ user.username }}</span>
+              {% if user.headline %}<small>{{ user.headline }}</small>{% endif %}
+              <span class="follower-count">{{ user.follower_count }} followers</span>
+            </div>
+          </a>
+          <button class="btn btn-sm btn-primary follow-btn" data-username="{{ user.username }}">
+            <i class="fa-solid fa-user-plus"></i> Follow
+          </button>
+        </div>
+        {% empty %}
+          <p class="empty-text">No suggestions right now.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Posts Grid -->
+  <h3 class="panel-heading mt-4">Recent Posts</h3>
+  <div class="explore-posts">
+    {% for item in post_data %}
+      {% include 'partials/post_card.html' %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.follow-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const username = this.dataset.username;
+    fetch(`/accounts/${username}/follow/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}})
+    .then(r=>r.json()).then(d => {
+      this.innerHTML = d.status==='accepted' ? '<i class="fa-solid fa-check"></i> Following' : '<i class="fa-solid fa-clock"></i> Requested';
+      this.disabled = true;
+    });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Bookmarks{% endblock %}
+{% block content %}
+<div class="feed-layout">
+  <h2 class="page-title"><i class="fa-solid fa-bookmark"></i> Bookmarks</h2>
+  {% for item in post_data %}
+    {% include 'partials/post_card.html' %}
+  {% empty %}
+    <div class="empty-card"><i class="fa-solid fa-bookmark"></i><p>No bookmarks yet.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

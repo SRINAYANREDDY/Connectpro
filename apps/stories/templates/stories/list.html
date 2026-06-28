@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Stories — ConnectPro{% endblock %}
+{% block content %}
+<div class="stories-page">
+  <div class="stories-header">
+    <h2>Stories</h2>
+    <a href="{% url 'stories:create' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Story</a>
+  </div>
+
+  <!-- Your stories -->
+  <div class="stories-row">
+    <div class="story-bubble add-story">
+      <a href="{% url 'stories:create' %}">
+        <div class="story-avatar-wrap">
+          <img src="{{ request.user.get_avatar_url }}" class="story-avatar"/>
+          <span class="story-add-icon"><i class="fa-solid fa-plus"></i></span>
+        </div>
+        <span class="story-name">Your Story</span>
+      </a>
+    </div>
+
+    {% for author, stories in story_groups.items %}
+    <div class="story-bubble">
+      <a href="{% url 'stories:view' stories.0.id %}">
+        <div class="story-avatar-wrap {% if stories %}has-story{% endif %}">
+          <img src="{{ author.get_avatar_url }}" class="story-avatar"/>
+        </div>
+        <span class="story-name">{{ author.username }}</span>
+      </a>
+    </div>
+    {% empty %}
+      <p class="empty-text">No stories from people you follow.</p>
+    {% endfor %}
+  </div>
+
+  <!-- My stories management -->
+  {% if my_stories %}
+  <div class="my-stories-section">
+    <h3>Your Active Stories</h3>
+    <div class="my-stories-grid">
+      {% for story in my_stories %}
+      <div class="my-story-card">
+        {% if story.image %}
+          <img src="{{ story.image.url }}" class="my-story-thumb"/>
+        {% elif story.video %}
+          <video class="my-story-thumb" muted><source src="{{ story.video.url }}"/></video>
+        {% endif %}
+        <div class="my-story-info">
+          <span>{{ story.view_count }} views</span>
+          <span>Expires {{ story.expires_at|timesince }}</span>
+        </div>
+        <button class="btn btn-sm btn-danger story-del-btn" data-story-id="{{ story.id }}">Delete</button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.story-del-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    if(!confirm('Delete this story?')) return;
+    const id = this.dataset.storyId;
+    fetch(`/stories/${id}/delete/`, {method:'POST', headers:{'X-CSRFToken':CSRF_TOKEN}})
+    .then(r=>r.json()).then(() => this.closest('.my-story-card').remove());
+  });
+});
+</script>
+{% endblock %}

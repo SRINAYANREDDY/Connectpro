@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Reel by @{{ reel.user.username }} — ConnectPro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/messaging_reels.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="single-reel-page">
+  <div class="single-reel-layout">
+
+    <!-- Left: video -->
+    <div class="single-reel-video-col">
+      <div class="reel-card single-reel-card" data-reel-id="{{ reel.pk }}">
+        <div class="reel-video-wrapper">
+          <video
+            class="reel-video"
+            src="{{ reel.video.url }}"
+            {% if reel.thumbnail %}poster="{{ reel.thumbnail.url }}"{% endif %}
+            controls
+            loop
+            playsinline
+            preload="metadata"
+          ></video>
+
+          <div class="reel-tap-overlay"></div>
+          <div class="reel-play-indicator" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="64" height="64"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+
+          <div class="reel-overlay-info">
+            <a href="{% url 'accounts:profile' reel.user.username %}" class="reel-author">
+              {% if reel.user.avatar %}
+                <img src="{{ reel.user.avatar.url }}" alt="{{ reel.user.username }}" class="reel-author-avatar">
+              {% else %}
+                <div class="reel-author-avatar reel-author-avatar--placeholder">{{ reel.user.username|first|upper }}</div>
+              {% endif %}
+              <span class="reel-author-name">@{{ reel.user.username }}</span>
+            </a>
+            {% if reel.caption %}
+              <p class="reel-caption">{{ reel.caption }}</p>
+            {% endif %}
+            <div class="reel-meta">
+              <span class="reel-view-count">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>
+                {{ reel.view_count }}
+              </span>
+              <span class="reel-time">{{ reel.created_at|date:"M j, Y" }}</span>
+            </div>
+          </div>
+
+          <div class="reel-overlay-actions">
+            <button
+              class="reel-action-btn reel-like-btn {% if liked %}liked{% endif %}"
+              data-reel-id="{{ reel.pk }}"
+              data-url="{% url 'reels:toggle_reel_like' reel.pk %}"
+              aria-label="Like"
+            >
+              <svg class="reel-action-icon heart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              <span class="reel-action-count reel-like-count">{{ reel.like_count }}</span>
+            </button>
+
+            {% if request.user == reel.user %}
+            <form method="post" action="{% url 'reels:delete_reel' reel.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="reel-action-btn reel-delete-btn" onclick="return confirm('Delete this reel?')">
+                <svg class="reel-action-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="26" height="26"><path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zm3-9h2v7H9V10zm4 0h2v7h-2V10zM15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+
+          <button class="reel-mute-btn">
+            <svg class="reel-mute-icon icon-sound" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="22" height="22"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            <svg class="reel-mute-icon icon-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="22" height="22" style="display:none"><path d="M16.5 12A4.5 4.5 0 0014 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25A6.985 6.985 0 0112 19c-.34 0-.68-.02-1-.07v2.07c.33.04.66.07 1 .07 1.77 0 3.4-.49 4.8-1.33l1.93 1.93L21 20.27 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: comments panel -->
+    <div class="single-reel-comments-col">
+      <div class="single-reel-comments-panel">
+        <div class="single-reel-comments-header">
+          <h2>Comments <span class="comment-count-badge">{{ reel.comment_count }}</span></h2>
+        </div>
+
+        <div class="single-reel-comments-list" id="comments-list-{{ reel.pk }}">
+          {% for comment in comments %}
+            <div class="reel-comment-item" id="comment-{{ comment.pk }}">
+              <a href="{% url 'accounts:profile' comment.user.username %}" class="reel-comment-avatar-link">
+                {% if comment.user.avatar %}
+                  <img src="{{ comment.user.avatar.url }}" alt="{{ comment.user.username }}" class="reel-comment-avatar">
+                {% else %}
+                  <div class="reel-comment-avatar reel-comment-avatar--placeholder">{{ comment.user.username|first|upper }}</div>
+                {% endif %}
+              </a>
+              <div class="reel-comment-body">
+                <a href="{% url 'accounts:profile' comment.user.username %}" class="reel-comment-username">@{{ comment.user.username }}</a>
+                <p class="reel-comment-text">{{ comment.content }}</p>
+                <span class="reel-comment-time">{{ comment.created_at|date:"M j, Y" }}</span>
+              </div>
+            </div>
+          {% empty %}
+            <p class="no-comments-msg" id="no-comments-msg">No comments yet. Be the first!</p>
+          {% endfor %}
+        </div>
+
+        <form class="reel-comment-form single-comment-form" data-reel-id="{{ reel.pk }}" data-url="{% url 'reels:add_reel_comment' reel.pk %}">
+          {% csrf_token %}
+          {% if request.user.avatar %}
+            <img src="{{ request.user.avatar.url }}" alt="me" class="reel-comment-avatar">
+          {% else %}
+            <div class="reel-comment-avatar reel-comment-avatar--placeholder">{{ request.user.username|first|upper }}</div>
+          {% endif %}
+          <input type="text" name="content" class="reel-comment-input" placeholder="Add a comment…" autocomplete="off" maxlength="500">
+          <button type="submit" class="reel-comment-submit" aria-label="Post">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div><!-- /.single-reel-layout -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/messaging_reels.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    initSingleReel();
+  });
+</script>
+{% endblock %}

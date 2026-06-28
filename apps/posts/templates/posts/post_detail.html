@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Post by {{ post.author.username }}{% endblock %}
+{% block content %}
+<div class="detail-layout">
+  <div class="post-detail-card">
+    {% with item=post liked=liked bookmarked=bookmarked comment_count=post.comments.count %}
+      {% include 'partials/post_card.html' with item=item %}
+    {% endwith %}
+  </div>
+
+  <div class="comments-panel">
+    <h3 class="comments-title">Comments</h3>
+    <form class="comment-form detail-comment-form" data-post-id="{{ post.id }}">
+      {% csrf_token %}
+      <img src="{{ request.user.get_avatar_url }}" class="comment-avatar" alt="you"/>
+      <input type="text" class="comment-input" placeholder="Write a comment..."/>
+      <button type="submit" class="btn-icon-send"><i class="fa-solid fa-paper-plane"></i></button>
+    </form>
+
+    <div class="comments-list" id="commentsList">
+      {% for comment in comments %}
+      <div class="comment-item" id="comment-{{ comment.id }}">
+        <img src="{{ comment.author.get_avatar_url }}" class="comment-avatar" alt=""/>
+        <div class="comment-body">
+          <div class="comment-header">
+            <a href="{% url 'accounts:profile' comment.author.username %}"><strong>{{ comment.author.username }}</strong></a>
+            <span class="comment-time">{{ comment.created_at|naturaltime }}</span>
+          </div>
+          <p class="comment-text">{{ comment.content }}</p>
+          <button class="reply-toggle" data-comment-id="{{ comment.id }}">Reply</button>
+          <form class="comment-form reply-form hidden" data-post-id="{{ post.id }}" data-parent-id="{{ comment.id }}">
+            {% csrf_token %}
+            <input type="text" class="comment-input" placeholder="Reply..."/>
+            <button type="submit" class="btn-icon-send"><i class="fa-solid fa-paper-plane"></i></button>
+          </form>
+          {% if comment.replies.all %}
+          <div class="replies-list">
+            {% for reply in comment.replies.all %}
+            <div class="comment-item reply-item" id="comment-{{ reply.id }}">
+              <img src="{{ reply.author.get_avatar_url }}" class="comment-avatar small" alt=""/>
+              <div class="comment-body">
+                <div class="comment-header">
+                  <a href="{% url 'accounts:profile' reply.author.username %}"><strong>{{ reply.author.username }}</strong></a>
+                  <span class="comment-time">{{ reply.created_at|naturaltime }}</span>
+                </div>
+                <p class="comment-text">{{ reply.content }}</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+        <p class="empty-text">No comments yet. Be the first!</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.reply-toggle').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const form = document.querySelector(`.reply-form[data-parent-id="${this.dataset.commentId}"]`);
+    form?.classList.toggle('hidden');
+  });
+});
+</script>
+{% endblock %}
